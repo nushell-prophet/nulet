@@ -11,7 +11,7 @@ export def "main setup" [] {
     print "Initializing font submodules..."
     ^git submodule update --init
     # Only check out the fonts/ directory from FIGfonts
-    ^git -C FIGfonts sparse-checkout set fonts
+    ^git -C font-submodules/FIGfonts sparse-checkout set fonts
     print "Done."
 }
 
@@ -29,7 +29,7 @@ export def "main test" [
     }
     let words = ['Hello' 'Hi' 'Test 123' 'FIG' 'Hello World!' 'nulet']
     let results = $all_fonts | each {|f|
-        let path = $"figlet-fonts/($f)"
+        let path = $"font-submodules/figlet-fonts/($f)"
         let font = try { load-font $path } catch {|e| return [{font: $f, text: "", ok: false, error: $e.msg}] }
         $words | each {|w|
             let mine = try { render-text $w $font | str trim --right } catch { "" }

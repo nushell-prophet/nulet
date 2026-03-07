@@ -1,8 +1,8 @@
 [submodule "figlet-fonts"]
-	path = figlet-fonts
+	path = font-submodules/figlet-fonts
 	url = https://github.com/xero/figlet-fonts
 [submodule "FIGfonts"]
-	path = FIGfonts
+	path = font-submodules/FIGfonts
 	url = https://github.com/PhMajerus/FIGfonts
 	shallow = true
 	sparse-checkout = fonts

@@ -12,7 +12,7 @@ nulet is a FIGlet text renderer implemented as a Nushell module. It parses FIGfo
 git submodule update --init   # or: nu toolkit.nu setup
 ```
 
-This fetches the `figlet-fonts/` submodule (xero/figlet-fonts) which provides ~380 .flf font files. System figlet fonts (from `figlet -I2`) are also discovered at runtime.
+This fetches font submodules in `font-submodules/` ([xero/figlet-fonts](https://github.com/xero/figlet-fonts) and [PhMajerus/FIGfonts](https://github.com/PhMajerus/FIGfonts)). System figlet fonts (from `figlet -I2`) are also discovered at runtime.
 
 ## Testing
 
@@ -51,7 +51,7 @@ Three files in `nulet/`, split by responsibility:
 
 - **Hardblanks**: Displayed as spaces but treated as visible characters during layout. Only smushing rule 6 can merge two hardblanks.
 - **Layout modes**: Derived from `full_layout` header field when present, otherwise from `old_layout`. Values: `full` (no overlap), `fit` (touch but don't merge), `smush` (overlap with rules).
-- **Font resolution order**: exact path → bundled `figlet-fonts/` dir → system figlet dir (via `figlet -I2`).
+- **Font resolution order**: exact path → bundled dirs in `font-submodules/` → system figlet dir (via `figlet -I2`).
 - **Completions**: `font-names` pre-quotes names containing spaces (e.g., `'ANSI Regular'`) to work around nushell's custom-completion quoting behavior.
 
 ## Nushell patterns used

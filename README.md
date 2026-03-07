@@ -5,10 +5,10 @@ A FIGlet text renderer implemented as a Nushell module. Parses FIGfont (.flf) fi
 ## Setup
 
 ```bash
-git submodule update --init
+nu toolkit.nu setup
 ```
 
-This fetches bundled fonts from [xero/figlet-fonts](https://github.com/xero/figlet-fonts). System figlet fonts (from `figlet -I2`) are also discovered at runtime — nearly 400 fonts in total.
+This fetches bundled fonts from [xero/figlet-fonts](https://github.com/xero/figlet-fonts) and [PhMajerus/FIGfonts](https://github.com/PhMajerus/FIGfonts) into `font-submodules/`. System figlet fonts (from `figlet -I2`) are also discovered at runtime.
 
 ## Usage
 
@@ -27,11 +27,14 @@ nu nulet/mod.nu fonts
 nu nulet/mod.nu showcase -t "Hi"
 ```
 
-## Testing
+## Development
+
+`toolkit.nu` provides development commands:
 
 ```bash
-nu toolkit.nu test              # all tests (requires figlet binary)
-nu toolkit.nu test -f Standard  # single font
+nu toolkit.nu setup              # fetch font submodules
+nu toolkit.nu test               # run all tests (requires figlet binary)
+nu toolkit.nu test -f Standard   # test a single font
 ```
 
 Tests compare nulet output against the system `figlet` binary.
