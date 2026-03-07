@@ -91,7 +91,11 @@ def parse-code-tag []: string -> int {
 }
 
 # Load and parse a FIGfont file
-export def load-font [path: string]: nothing -> record {
+#
+# By default, only required characters (ASCII 32-126 + Deutsch) are parsed.
+# Use --all-chars to also parse code-tagged characters (Unicode/extended),
+# which can be slow for large CJK fonts with thousands of glyphs.
+export def load-font [path: string, --all-chars]: nothing -> record {
     let raw = if (open --raw $path | bytes at 0..<2) == (0x[504B]) {
         # Zip-compressed FIGfont (used by PhMajerus/FIGfonts)
         let size = ^unzip -l $path | parse --regex '(\d+)\s+\d+ file' | get capture0.0 | into int
@@ -124,17 +128,19 @@ export def load-font [path: string]: nothing -> record {
         $chars = $chars | upsert ($code | into string) $fig_lines
     }
 
-    # Parse code-tagged FIGcharacters
-    mut idx = $n_required * $height
-    let total = $data_lines | length
-    while $idx < $total {
-        let tag_line = $data_lines | get $idx
-        let code = try { $tag_line | parse-code-tag } catch { break }
-        $idx = $idx + 1
-        if ($idx + $height) > $total { break }
-        let fig_lines = $data_lines | skip $idx | first $height | each { strip-endmarks }
-        $chars = $chars | upsert ($code | into string) $fig_lines
-        $idx = $idx + $height
+    # Parse code-tagged FIGcharacters (only when --all-chars is set)
+    if $all_chars {
+        mut idx = $n_required * $height
+        let total = $data_lines | length
+        while $idx < $total {
+            let tag_line = $data_lines | get $idx
+            let code = try { $tag_line | parse-code-tag } catch { break }
+            $idx = $idx + 1
+            if ($idx + $height) > $total { break }
+            let fig_lines = $data_lines | skip $idx | first $height | each { strip-endmarks }
+            $chars = $chars | upsert ($code | into string) $fig_lines
+            $idx = $idx + $height
+        }
     }
 
     {header: $header, chars: $chars}
