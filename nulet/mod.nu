@@ -6,6 +6,7 @@
 #   Subcommands:                nu nulet/mod.nu fonts
 #                               nu nulet/mod.nu info -f Big
 #                               nu nulet/mod.nu preview -f Slant
+#                               nu nulet/mod.nu showcase -t "Hi"
 
 export use parse.nu [load-font, parse-header, layout-mode, char-to-code]
 export use render.nu [render-text]
@@ -70,6 +71,24 @@ export def "main info" [
     let f = load-font $font_path
     let lm = layout-mode $f.header
     $f.header | merge ($lm | reject old_smush) | insert char_count ($f.chars | columns | length)
+}
+
+# Showcase all fonts with sample text
+export def "main showcase" [
+    --text (-t): string   # Sample text (default: "Hello")
+]: nothing -> record {
+    let sample = $text | default "Hello"
+    ls $FONTS_DIR
+    | where name =~ '\.flf$'
+    | sort-by name
+    | reduce --fold {} {|f, acc|
+        let name = $f.name | path basename | str replace '.flf' ''
+        try {
+            $acc | upsert $name (render-text $sample (load-font $f.name))
+        } catch {
+            $acc
+        }
+    }
 }
 
 # Preview a font with sample text
