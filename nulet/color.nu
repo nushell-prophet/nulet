@@ -19,6 +19,11 @@ export def color-names []: nothing -> list<string> {
     $NAMED_COLORS | columns | prepend "rainbow" | sort
 }
 
+# Gradient direction names for shell completion
+export def gradient-names []: nothing -> list<string> {
+    [horizontal vertical]
+}
+
 # Resolve a color name or #rrggbb hex to an RGB triple
 def resolve-color [spec: string]: nothing -> list<int> {
     let s = $spec | str downcase | str trim

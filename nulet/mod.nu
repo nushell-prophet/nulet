@@ -12,7 +12,7 @@ export use render.nu [render-text]
 export use color.nu [colorize]
 use parse.nu [load-font, layout-mode]
 use fonts.nu [DEFAULT_FONT, font-display-name, all-font-files, font-names, resolve-font]
-use color.nu [color-names]
+use color.nu [color-names, gradient-names]
 
 # Render text as FIGlet ASCII art
 export def main [
@@ -20,7 +20,7 @@ export def main [
     --font (-f): string@font-names  # Font name or path to .flf file
     --layout (-l): string    # Layout mode: full, fit, smush
     --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
-    --gradient (-g): string  # Direction: horizontal (default) or vertical
+    --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
 ]: nothing -> string {
     if ($text | is-empty) {
         error make {msg: "No text provided. Usage: nulet <text> [-f font] [-l layout]"}
@@ -59,7 +59,7 @@ def "main info" [
 export def showcase [
     --text (-t): string   # Sample text (default: "Hello")
     --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
-    --gradient (-g): string  # Direction: horizontal (default) or vertical
+    --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
 ]: nothing -> record {
     let sample = $text | default "Hello"
     all-font-files
@@ -87,7 +87,7 @@ def "main preview" [
     --font (-f): string@font-names   # Font name or path
     --text (-t): string   # Sample text (default: font name)
     --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
-    --gradient (-g): string  # Direction: horizontal (default) or vertical
+    --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
 ]: nothing -> string {
     let font_file = $font | default $DEFAULT_FONT
     let sample = $text | default ($font_file | str replace '.flf' '')
