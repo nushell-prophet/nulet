@@ -247,6 +247,12 @@ export def render-text [
         }
     }
 
-    # Split on newlines, render each line, join results
-    $text | split row (char nl) | each {|line| do $render_line $line } | str join (char nl)
+    # Split on newlines, render each line, trim trailing blank lines, join with one blank line
+    $text | split row (char nl) | each {|line|
+        let rendered = do $render_line $line
+        # Strip trailing blank lines
+        $rendered | split row (char nl) | reverse
+        | skip while {|l| ($l | str trim) == '' }
+        | reverse | str join (char nl)
+    } | str join $"(char nl)(char nl)"
 }
