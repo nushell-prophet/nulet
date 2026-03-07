@@ -14,9 +14,23 @@ const NAMED_COLORS = {
     purple: [128, 0, 128]
 }
 
-# Color names for shell completion
+const GRADIENT_PRESETS = {
+    sunset: { start: [255, 69, 0], end: [255, 20, 147] }
+    ocean: { start: [0, 105, 148], end: [64, 201, 255] }
+    fire: { start: [255, 0, 0], end: [255, 255, 0] }
+    ice: { start: [224, 247, 250], end: [0, 145, 234] }
+    neon: { start: [57, 255, 20], end: [255, 0, 255] }
+    pastel: { start: [255, 182, 193], end: [135, 206, 235] }
+    gold: { start: [255, 140, 0], end: [255, 215, 0] }
+    matrix: { start: [0, 51, 0], end: [0, 255, 0] }
+}
+
+# Color and gradient names for shell completion
 export def color-names []: nothing -> list<string> {
-    $NAMED_COLORS | columns | prepend "rainbow" | sort
+    $NAMED_COLORS | columns
+    | append ($GRADIENT_PRESETS | columns)
+    | prepend "rainbow"
+    | sort
 }
 
 # Gradient direction names for shell completion
@@ -37,6 +51,11 @@ def resolve-color [spec: string]: nothing -> list<int> {
     } else {
         error make {msg: $"Unknown color: ($spec). Use a named color or #rrggbb hex."}
     }
+}
+
+# Convert RGB triple to 0xrrggbb hex for ansi gradient
+def rgb-to-hex []: list<int> -> string {
+    $in | each { format number --no-prefix | get lowerhex | fill -a r -c '0' -w 2 } | str join | $"0x($in)"
 }
 
 # ANSI truecolor foreground escape
@@ -99,12 +118,23 @@ def color-vertical [lines: list<string>, rgb_fn: closure]: nothing -> string {
     } | str join (char nl)
 }
 
+# Resolve a gradient spec to {start: list<int>, end: list<int>}
+def resolve-gradient [spec: string]: nothing -> record {
+    if $spec in ($GRADIENT_PRESETS | columns) {
+        $GRADIENT_PRESETS | get $spec
+    } else {
+        let parts = $spec | split row ':'
+        { start: (resolve-color ($parts | first)), end: (resolve-color ($parts | last)) }
+    }
+}
+
 # Apply color to FIGlet text
 #
 # Spec values:
 #   "red"        — solid named color
 #   "#ff6600"    — solid hex color
 #   "rainbow"    — rainbow gradient
+#   "sunset"     — named gradient preset (sunset, ocean, fire, ice, neon, pastel, gold, matrix)
 #   "red:blue"   — gradient between two colors
 export def colorize [
     spec: string          # Color spec
@@ -113,28 +143,24 @@ export def colorize [
     let text = $in
     let dir = $direction | default "horizontal"
     let lines = $text | lines
-    let is_rainbow = $spec == "rainbow"
-    let is_gradient = (not $is_rainbow) and ($spec | str contains ':')
 
-    if (not $is_rainbow) and (not $is_gradient) {
-        # Solid color — one escape per line
-        let esc = fg (resolve-color $spec)
-        let reset = (ansi reset)
-        $lines | each {|line| $"($esc)($line)($reset)" } | str join (char nl)
-    } else if $is_rainbow {
+    if $spec == "rainbow" {
         if $dir == "vertical" {
             color-vertical $lines {|t| rainbow-rgb $t }
         } else {
             color-horizontal $lines {|t| rainbow-rgb $t }
         }
-    } else {
-        let parts = $spec | split row ':'
-        let c1 = resolve-color ($parts | first)
-        let c2 = resolve-color ($parts | last)
+    } else if ($spec in ($GRADIENT_PRESETS | columns)) or ($spec | str contains ':') {
+        let g = resolve-gradient $spec
         if $dir == "vertical" {
-            color-vertical $lines {|t| lerp-rgb $c1 $c2 $t }
+            color-vertical $lines {|t| lerp-rgb $g.start $g.end $t }
         } else {
-            color-horizontal $lines {|t| lerp-rgb $c1 $c2 $t }
+            $text | ansi gradient --fgstart ($g.start | rgb-to-hex) --fgend ($g.end | rgb-to-hex)
         }
+    } else {
+        # Solid color
+        let esc = fg (resolve-color $spec)
+        let reset = (ansi reset)
+        $lines | each {|line| $"($esc)($line)($reset)" } | str join (char nl)
     }
 }
