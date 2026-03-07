@@ -57,16 +57,26 @@ def "main info" [
     $f.header | merge ($lm | reject old_smush) | insert char_count ($f.chars | columns | length)
 }
 
-# Showcase all fonts with sample text
+# Showcase fonts with sample text
+#
+# By default, displays 5 random fonts. Use --all-fonts to render every
+# installed font (with ~400 fonts this takes 6 seconds or more).
 export def showcase [
     --text (-t): string   # Sample text (default: "Hello")
+    --all-fonts (-a)      # Render all fonts instead of a random sample
+    --num (-n): int        # Number of random fonts to show (default: 5)
     --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
     --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
     --reverse (-r)        # Reverse the gradient direction
 ]: nothing -> record {
     let sample = $text | default "Hello"
-    all-font-files
-    | sort-by name
+    let fonts = all-font-files | sort-by name
+    let selection = if $all_fonts {
+        $fonts
+    } else {
+        $fonts | shuffle | first ($num | default 5)
+    }
+    $selection
     | par-each --keep-order {|f|
         let name = $f.name | font-display-name
         try {
