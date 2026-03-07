@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-nulet is a FIGlet text renderer implemented as a Nushell module. It parses FIGfont (.flf) files and renders text as ASCII art, matching the FIGfont Version 2 standard (`figlet-standard.txt`).
+nulet is a FIGlet text renderer implemented as a Nushell module. It parses FIGfont (.flf) files and renders text as ASCII art, matching the FIGfont Version 2 standard (`figfont-standard.txt`).
 
 ## Setup
 
