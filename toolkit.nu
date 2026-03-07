@@ -2,17 +2,23 @@
 
 export def main [] {
     print "Available commands:"
-    print "  toolkit.nu setup    — fetch font submodules"
+    print "  toolkit.nu setup    — fetch font submodules + compile fonts"
     print "  toolkit.nu compile  — pre-compile fonts to JSON for fast loading"
     print "  toolkit.nu test     — run tests against figlet"
 }
 
-# Fetch font submodules (figlet-fonts, FIGfonts)
-export def "main setup" [] {
+# Fetch font submodules and compile fonts
+export def "main setup" [
+    --no-compile  # Skip font pre-compilation step
+] {
     print "Initializing font submodules..."
     ^git submodule update --init
     # Only check out the fonts/ directory from FIGfonts
     ^git -C font-submodules/FIGfonts sparse-checkout set fonts
+    if not $no_compile {
+        print "Compiling fonts..."
+        main compile
+    }
     print "Done."
 }
 
