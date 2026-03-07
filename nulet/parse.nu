@@ -87,20 +87,7 @@ export def layout-mode [header: record]: nothing -> record {
 
 # Parse a code tag line, returning the character code
 def parse-code-tag []: string -> int {
-    let s = $in | str trim
-    if ($s | str starts-with '0x') or ($s | str starts-with '0X') {
-        let hex = $s | split row ' ' | first
-        $hex | into int
-    } else if ($s | str starts-with '-0x') or ($s | str starts-with '-0X') {
-        let hex = $s | split row ' ' | first
-        $hex | into int
-    } else if ($s | str starts-with '0') and ($s | str length) > 1 and not ($s | str starts-with '0 ') {
-        # Octal
-        let oct_str = $s | split row ' ' | first
-        $oct_str | into int
-    } else {
-        $s | split row ' ' | first | into int
-    }
+    $in | str trim | split row ' ' | first | str downcase | into int
 }
 
 # Load and parse a FIGfont file
