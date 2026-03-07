@@ -27,7 +27,8 @@ export def main [
     }
     let font_path = resolve-font ($font | default $DEFAULT_FONT)
     let f = load-font $font_path
-    let result = render-text ($text | str join ' ') $f --layout-override $layout
+    let input = $text | str join ' ' | str replace --all '\n' (char nl)
+    let result = render-text $input $f --layout-override $layout
     if $color != null {
         $result | colorize $color --direction $gradient
     } else {

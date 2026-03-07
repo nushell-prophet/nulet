@@ -218,30 +218,35 @@ export def render-text [
         }
     }
 
-    # Render each character and combine
-    let result = $text | split chars | reduce --fold $empty_fig {|ch, acc|
-        let code = $ch | char-to-code
-        let fig = do $get_fig $code
-        let overlap = calc-overlap $acc $fig $hardblank $mode $rules $old_smush
-        combine-figs $acc $fig $overlap $hardblank $mode $rules $old_smush
-    }
+    # Render a single line of text into FIGcharacter lines
+    let render_line = {|line_text|
+        let result = $line_text | split chars | reduce --fold $empty_fig {|ch, acc|
+            let code = $ch | char-to-code
+            let fig = do $get_fig $code
+            let overlap = calc-overlap $acc $fig $hardblank $mode $rules $old_smush
+            combine-figs $acc $fig $overlap $hardblank $mode $rules $old_smush
+        }
 
-    # Replace hardblanks with spaces in final output
-    let lines = $result | each { str replace --all $hardblank ' ' }
+        # Replace hardblanks with spaces in final output
+        let lines = $result | each { str replace --all $hardblank ' ' }
 
-    # In fit/smush modes, strip common leading blank columns
-    if $mode in ['fit' 'smush'] {
-        let min_lead = $lines
-        | where { str trim | is-not-empty }
-        | each {|line| $line | str replace -r '^( *).*' '$1' | str length -g }
-        | math min
-        | default 0
-        if $min_lead > 0 {
-            $lines | each { str substring -g $min_lead.. } | str join (char nl)
+        # In fit/smush modes, strip common leading blank columns
+        if $mode in ['fit' 'smush'] {
+            let min_lead = $lines
+            | where { str trim | is-not-empty }
+            | each {|line| $line | str replace -r '^( *).*' '$1' | str length -g }
+            | math min
+            | default 0
+            if $min_lead > 0 {
+                $lines | each { str substring -g $min_lead.. } | str join (char nl)
+            } else {
+                $lines | str join (char nl)
+            }
         } else {
             $lines | str join (char nl)
         }
-    } else {
-        $lines | str join (char nl)
     }
+
+    # Split on newlines, render each line, join results
+    $text | split row (char nl) | each {|line| do $render_line $line } | str join (char nl)
 }
