@@ -20,21 +20,30 @@ def system-font-dir []: nothing -> any {
     try { ^figlet -I2 | str trim } catch { null }
 }
 
-# Collect all .flf files from bundled + system font directories
-def all-font-files []: nothing -> table {
+# Directories to search for .flf font files (bundled + system)
+def font-dirs []: nothing -> list<string> {
     let sys = system-font-dir
-    let dirs = if $sys != null and ($sys | path exists) {
+    if $sys != null and ($sys | path exists) {
         [$FONTS_DIR $sys]
     } else {
         [$FONTS_DIR]
     }
-    $dirs | each {|d| try { ls $d | where name =~ '\.flf$' } catch { [] } } | flatten
+}
+
+# Strip .flf extension to get a display name
+def font-display-name []: string -> string {
+    path basename | str replace '.flf' ''
+}
+
+# Collect all .flf files from bundled + system font directories
+def all-font-files []: nothing -> table {
+    font-dirs | each {|d| try { ls $d | where name =~ '\.flf$' } catch { [] } } | flatten
 }
 
 # Complete font names from all known font directories
 def font-names []: nothing -> list<string> {
     all-font-files
-    | each { get name | path basename | str replace '.flf' '' }
+    | each { get name | font-display-name }
     | uniq
     | sort
     | each {|name| if ($name | str contains ' ') { $"'($name)'" } else { $name } }
@@ -45,14 +54,7 @@ def resolve-font [font: string] {
     if ($font | path exists) {
         return $font
     }
-    # Search bundled fonts, then system figlet fonts
-    let sys = system-font-dir
-    let dirs = if $sys != null and ($sys | path exists) {
-        [$FONTS_DIR $sys]
-    } else {
-        [$FONTS_DIR]
-    }
-    for dir in $dirs {
+    for dir in (font-dirs) {
         let candidate = $dir | path join $font
         if ($candidate | path exists) { return $candidate }
         let with_ext = $dir | path join ($font + '.flf')
@@ -79,7 +81,7 @@ export def main [
 export def "main fonts" []: nothing -> table {
     all-font-files
     | select name
-    | update name { path basename | str replace '.flf' '' }
+    | update name { font-display-name }
     | rename font
     | uniq-by font
     | sort-by font
@@ -103,7 +105,7 @@ export def "main showcase" [
     all-font-files
     | sort-by name
     | par-each --keep-order {|f|
-        let name = $f.name | path basename | str replace '.flf' ''
+        let name = $f.name | font-display-name
         try {
             [($name) (render-text $sample (load-font $f.name))]
         } catch {
@@ -119,9 +121,8 @@ export def "main preview" [
     --font (-f): string@font-names   # Font name or path
     --text (-t): string   # Sample text (default: font name)
 ]: nothing -> string {
-    let font_name = $font | default $DEFAULT_FONT | str replace '.flf' ''
-    let sample = $text | default $font_name
-    let font_path = resolve-font ($font | default $DEFAULT_FONT)
-    let f = load-font $font_path
+    let font_file = $font | default $DEFAULT_FONT
+    let sample = $text | default ($font_file | str replace '.flf' '')
+    let f = load-font (resolve-font $font_file)
     render-text $sample $f
 }
