@@ -13,6 +13,15 @@ export use render.nu [render-text]
 const FONTS_DIR = (path self | path dirname | path join '..' 'figlet-fonts')
 const DEFAULT_FONT = 'Small.flf'
 
+# Complete font names from the bundled fonts directory
+def font-names []: nothing -> list<string> {
+    ls $FONTS_DIR
+    | where name =~ '\.flf$'
+    | each { get name | path basename | str replace '.flf' '' }
+    | sort
+    | each {|name| if ($name | str contains ' ') { $"'($name)'" } else { $name } }
+}
+
 # Resolve font path: absolute path, relative path, or font name in bundled fonts
 def resolve-font [font: string] {
     if ($font | path exists) {
@@ -32,7 +41,7 @@ def resolve-font [font: string] {
 # Render text as FIGlet ASCII art
 export def main [
     ...text: string          # Text to render (joined with spaces)
-    --font (-f): string      # Font name or path to .flf file
+    --font (-f): string@font-names  # Font name or path to .flf file
     --layout (-l): string    # Layout mode: full, fit, smush
 ]: nothing -> string {
     if ($text | is-empty) {
@@ -55,7 +64,7 @@ export def "main fonts" []: nothing -> table {
 
 # Show font info (header + layout mode)
 export def "main info" [
-    --font (-f): string  # Font name or path
+    --font (-f): string@font-names  # Font name or path
 ]: nothing -> record {
     let font_path = resolve-font ($font | default $DEFAULT_FONT)
     let f = load-font $font_path
@@ -65,7 +74,7 @@ export def "main info" [
 
 # Preview a font with sample text
 export def "main preview" [
-    --font (-f): string   # Font name or path
+    --font (-f): string@font-names   # Font name or path
     --text (-t): string   # Sample text (default: font name)
 ]: nothing -> string {
     let font_name = $font | default $DEFAULT_FONT | str replace '.flf' ''
