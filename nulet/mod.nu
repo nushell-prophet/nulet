@@ -9,21 +9,30 @@
 #   Module mode:                use nulet; nulet showcase -t "Hi"
 
 export use render.nu [render-text]
+export use color.nu [colorize]
 use parse.nu [load-font, layout-mode]
 use fonts.nu [DEFAULT_FONT, font-display-name, all-font-files, font-names, resolve-font]
+use color.nu [color-names]
 
 # Render text as FIGlet ASCII art
 export def main [
     ...text: string          # Text to render (joined with spaces)
     --font (-f): string@font-names  # Font name or path to .flf file
     --layout (-l): string    # Layout mode: full, fit, smush
+    --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
+    --gradient (-g): string  # Direction: horizontal (default) or vertical
 ]: nothing -> string {
     if ($text | is-empty) {
         error make {msg: "No text provided. Usage: nulet <text> [-f font] [-l layout]"}
     }
     let font_path = resolve-font ($font | default $DEFAULT_FONT)
     let f = load-font $font_path
-    render-text ($text | str join ' ') $f --layout-override $layout
+    let result = render-text ($text | str join ' ') $f --layout-override $layout
+    if $color != null {
+        $result | colorize $color --direction $gradient
+    } else {
+        $result
+    }
 }
 
 # List available fonts
@@ -49,6 +58,8 @@ def "main info" [
 # Showcase all fonts with sample text
 export def showcase [
     --text (-t): string   # Sample text (default: "Hello")
+    --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
+    --gradient (-g): string  # Direction: horizontal (default) or vertical
 ]: nothing -> record {
     let sample = $text | default "Hello"
     all-font-files
@@ -56,7 +67,13 @@ export def showcase [
     | par-each --keep-order {|f|
         let name = $f.name | font-display-name
         try {
-            [($name) (render-text $sample (load-font $f.name))]
+            let rendered = render-text $sample (load-font $f.name)
+            let result = if $color != null {
+                $rendered | colorize $color --direction $gradient
+            } else {
+                $rendered
+            }
+            [($name) $result]
         } catch {
             null
         }
@@ -69,9 +86,16 @@ export def showcase [
 def "main preview" [
     --font (-f): string@font-names   # Font name or path
     --text (-t): string   # Sample text (default: font name)
+    --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
+    --gradient (-g): string  # Direction: horizontal (default) or vertical
 ]: nothing -> string {
     let font_file = $font | default $DEFAULT_FONT
     let sample = $text | default ($font_file | str replace '.flf' '')
     let f = load-font (resolve-font $font_file)
-    render-text $sample $f
+    let result = render-text $sample $f
+    if $color != null {
+        $result | colorize $color --direction $gradient
+    } else {
+        $result
+    }
 }
