@@ -93,11 +93,19 @@ def parse-code-tag []: string -> int {
 # Load and parse a FIGfont file
 export def load-font [path: string]: nothing -> record {
     let raw = if (open --raw $path | bytes at 0..<2) == (0x[504B]) {
+        # Zip-compressed FIGfont (used by PhMajerus/FIGfonts)
+        let size = ^unzip -l $path | parse --regex '(\d+)\s+\d+ file' | get capture0.0 | into int
+        if $size > 10_000_000 {
+            error make {msg: $"Compressed font too large: ($size) bytes (max 10MB)"}
+        }
         ^unzip -p $path
     } else {
         open --raw $path
     }
-    let all_lines = try { $raw | lines } catch { $raw | decode latin1 | lines }
+    # Strip ANSI escape sequences from font data — a crafted .flf could embed
+    # terminal control codes (cursor movement, title setting, OSC sequences)
+    # that execute when rendered. Nulet's own colorization is applied later.
+    let all_lines = try { $raw | lines } catch { $raw | decode latin1 | lines } | each { ansi strip }
     let header = $all_lines | first | parse-header
     let height = $header.height
     let data_start = 1 + $header.comment_lines
