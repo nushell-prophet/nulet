@@ -100,10 +100,10 @@ def calc-overlap [
         let r_len = $r_row | str length -g
 
         # Count trailing blanks on left (hardblanks are NOT blank for horizontal ops)
-        let l_trail = $l_row | str replace -r '.*?( *)$' '$1' | str length -g
+        let l_trail = $l_len - ($l_row | str trim --right | str length -g)
 
         # Count leading blanks on right
-        let r_lead = $r_row | str replace -r '^( *).*' '$1' | str length -g
+        let r_lead = $r_len - ($r_row | str trim --left | str length -g)
 
         let fit_amount = $l_trail + $r_lead
 
@@ -234,7 +234,7 @@ export def render-text [
         if $mode in ['fit' 'smush'] {
             let min_lead = $lines
             | where { str trim | is-not-empty }
-            | each {|line| $line | str replace -r '^( *).*' '$1' | str length -g }
+            | each {|line| ($line | str length -g) - ($line | str trim --left | str length -g) }
             | math min
             | default 0
             if $min_lead > 0 {

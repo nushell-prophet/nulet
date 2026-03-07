@@ -29,7 +29,7 @@ export def char-to-code []: string -> int {
 # Strip endmark characters from the right side of a FIGcharacter line
 def strip-endmarks []: string -> string {
     if ($in | is-empty) { return "" }
-    let endmark = $in | split chars | last
+    let endmark = $in | str substring (-1)..
     $in | str trim --right --char $endmark
 }
 
@@ -106,10 +106,11 @@ export def load-font [path: string, --all-chars]: nothing -> record {
     } else {
         open --raw $path
     }
-    # Strip ANSI escape sequences from font data — a crafted .flf could embed
-    # terminal control codes (cursor movement, title setting, OSC sequences)
-    # that execute when rendered. Nulet's own colorization is applied later.
-    let all_lines = try { $raw | lines } catch { $raw | decode latin1 | lines } | each { ansi strip }
+    # Strip ANSI escape sequences only when font data actually contains them.
+    # A crafted .flf could embed terminal control codes; most fonts don't.
+    let has_ansi = $raw | str contains (char --integer 27)
+    let all_lines = try { $raw | lines } catch { $raw | decode latin1 | lines }
+    | if $has_ansi { each { ansi strip } } else { }
     let header = $all_lines | first | parse-header
     let height = $header.height
     let data_start = 1 + $header.comment_lines
@@ -120,16 +121,16 @@ export def load-font [path: string, --all-chars]: nothing -> record {
     let n_required = $required_codes | length
 
     # Parse required FIGcharacters
-    mut chars = {}
-    for i in 0..<$n_required {
+    let chars = 0..<$n_required | each {|i|
         let start = $i * $height
         let fig_lines = $data_lines | skip $start | first $height | each { strip-endmarks }
         let code = $required_codes | get $i
-        $chars = $chars | upsert ($code | into string) $fig_lines
-    }
+        [($code | into string) $fig_lines]
+    } | into record
 
     # Parse code-tagged FIGcharacters (only when --all-chars is set)
-    if $all_chars {
+    let chars = if $all_chars {
+        mut ch = $chars
         mut idx = $n_required * $height
         let total = $data_lines | length
         while $idx < $total {
@@ -138,9 +139,12 @@ export def load-font [path: string, --all-chars]: nothing -> record {
             $idx = $idx + 1
             if ($idx + $height) > $total { break }
             let fig_lines = $data_lines | skip $idx | first $height | each { strip-endmarks }
-            $chars = $chars | upsert ($code | into string) $fig_lines
+            $ch = $ch | upsert ($code | into string) $fig_lines
             $idx = $idx + $height
         }
+        $ch
+    } else {
+        $chars
     }
 
     {header: $header, chars: $chars}
