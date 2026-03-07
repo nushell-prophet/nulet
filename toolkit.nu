@@ -17,7 +17,8 @@ export def "main setup" [] {
 export def "main test" [
     --font (-f): string  # Test a specific font (default: all common fonts)
 ] {
-    use nulet [load-font, render-text]
+    use nulet/parse.nu [load-font]
+    use nulet [render-text]
     let all_fonts = if $font != null {
         [$"($font).flf"]
     } else {

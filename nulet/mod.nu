@@ -8,9 +8,8 @@
 #                               nu nulet/mod.nu preview -f Slant
 #                               nu nulet/mod.nu showcase -t "Hi"
 
-export use parse.nu [load-font]
 export use render.nu [render-text]
-use parse.nu [parse-header, layout-mode, char-to-code]
+use parse.nu [load-font, parse-header, layout-mode, char-to-code]
 
 const FONTS_DIR = (path self | path dirname | path join '..' 'figlet-fonts')
 const DEFAULT_FONT = 'Small.flf'
@@ -78,7 +77,7 @@ export def main [
 }
 
 # List available fonts
-export def "main fonts" []: nothing -> table {
+def "main fonts" []: nothing -> table {
     all-font-files
     | select name
     | update name { font-display-name }
@@ -88,7 +87,7 @@ export def "main fonts" []: nothing -> table {
 }
 
 # Show font info (header + layout mode)
-export def "main info" [
+def "main info" [
     --font (-f): string@font-names  # Font name or path
 ]: nothing -> record {
     let font_path = resolve-font ($font | default $DEFAULT_FONT)
@@ -117,7 +116,7 @@ export def "main showcase" [
 }
 
 # Preview a font with sample text
-export def "main preview" [
+def "main preview" [
     --font (-f): string@font-names   # Font name or path
     --text (-t): string   # Sample text (default: font name)
 ]: nothing -> string {
