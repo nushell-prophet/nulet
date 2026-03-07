@@ -92,7 +92,11 @@ def parse-code-tag []: string -> int {
 
 # Load and parse a FIGfont file
 export def load-font [path: string]: nothing -> record {
-    let raw = open --raw $path
+    let raw = if (open --raw $path | bytes at 0..<2) == (0x[504B]) {
+        ^unzip -p $path
+    } else {
+        open --raw $path
+    }
     let all_lines = try { $raw | lines } catch { $raw | decode latin1 | lines }
     let header = $all_lines | first | parse-header
     let height = $header.height
