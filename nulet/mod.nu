@@ -14,27 +14,48 @@ export use render.nu [render-text]
 const FONTS_DIR = (path self | path dirname | path join '..' 'figlet-fonts')
 const DEFAULT_FONT = 'Small.flf'
 
-# Complete font names from the bundled fonts directory
+# Get system figlet font directory, or null if figlet is not installed
+def system-font-dir []: nothing -> any {
+    try { ^figlet -I2 | str trim } catch { null }
+}
+
+# Collect all .flf files from bundled + system font directories
+def all-font-files []: nothing -> table {
+    let sys = system-font-dir
+    let dirs = if $sys != null and ($sys | path exists) {
+        [$FONTS_DIR $sys]
+    } else {
+        [$FONTS_DIR]
+    }
+    $dirs | each {|d| try { ls $d | where name =~ '\.flf$' } catch { [] } } | flatten
+}
+
+# Complete font names from all known font directories
 def font-names []: nothing -> list<string> {
-    ls $FONTS_DIR
-    | where name =~ '\.flf$'
+    all-font-files
     | each { get name | path basename | str replace '.flf' '' }
+    | uniq
     | sort
     | each {|name| if ($name | str contains ' ') { $"'($name)'" } else { $name } }
 }
 
-# Resolve font path: absolute path, relative path, or font name in bundled fonts
+# Resolve font path: absolute path, relative path, or font name in known directories
 def resolve-font [font: string] {
     if ($font | path exists) {
         return $font
     }
-    let candidate = $FONTS_DIR | path join $font
-    if ($candidate | path exists) {
-        return $candidate
+    # Search bundled fonts, then system figlet fonts
+    let sys = system-font-dir
+    let dirs = if $sys != null and ($sys | path exists) {
+        [$FONTS_DIR $sys]
+    } else {
+        [$FONTS_DIR]
     }
-    let with_ext = $FONTS_DIR | path join ($font + '.flf')
-    if ($with_ext | path exists) {
-        return $with_ext
+    for dir in $dirs {
+        let candidate = $dir | path join $font
+        if ($candidate | path exists) { return $candidate }
+        let with_ext = $dir | path join ($font + '.flf')
+        if ($with_ext | path exists) { return $with_ext }
     }
     error make {msg: $"Font not found: ($font). Use `nulet fonts` to list available fonts."}
 }
@@ -55,11 +76,11 @@ export def main [
 
 # List available fonts
 export def "main fonts" []: nothing -> table {
-    ls $FONTS_DIR
-    | where name =~ '\.flf$'
+    all-font-files
     | select name
     | update name { path basename | str replace '.flf' '' }
     | rename font
+    | uniq-by font
     | sort-by font
 }
 
@@ -78,8 +99,7 @@ export def "main showcase" [
     --text (-t): string   # Sample text (default: "Hello")
 ]: nothing -> record {
     let sample = $text | default "Hello"
-    ls $FONTS_DIR
-    | where name =~ '\.flf$'
+    all-font-files
     | sort-by name
     | par-each --keep-order {|f|
         let name = $f.name | path basename | str replace '.flf' ''
