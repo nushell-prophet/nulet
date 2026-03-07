@@ -73,7 +73,7 @@ def lerp-rgb [c1: list<int>, c2: list<int>, t: float]: nothing -> list<int> {
 # Color each character per-column with a given RGB-from-position function
 def color-horizontal [lines: list<string>, rgb_fn: closure]: nothing -> string {
     let reset = (ansi reset)
-    let max_len = $lines | each { str length } | math max | default 1
+    let max_len = $lines | each { str length -g } | math max | default 1
     $lines | each {|line|
         let chars = $line | split chars
         if ($chars | is-empty) {

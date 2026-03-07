@@ -35,7 +35,7 @@ def strip-endmarks []: string -> string {
 
 # Parse the FIGfont header line
 export def parse-header []: string -> record {
-    let parts = $in | split row ' '
+    let parts = $in | split row ' ' | where $it != ''
     let sig_hb = $parts.0
     if not ($sig_hb | str starts-with 'flf2a') {
         error make {msg: "Invalid FIGfont: signature must start with flf2a"}
@@ -92,7 +92,8 @@ def parse-code-tag []: string -> int {
 
 # Load and parse a FIGfont file
 export def load-font [path: string]: nothing -> record {
-    let all_lines = open --raw $path | lines
+    let raw = open --raw $path
+    let all_lines = try { $raw | lines } catch { $raw | decode latin1 | lines }
     let header = $all_lines | first | parse-header
     let height = $header.height
     let data_start = 1 + $header.comment_lines

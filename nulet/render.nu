@@ -4,7 +4,7 @@ use parse.nu [char-to-code, layout-mode]
 
 # Get the visible width of a FIGcharacter (width of its first line)
 def fig-width [fig: list<string>]: nothing -> int {
-    $fig | first | str length
+    $fig | first | str length -g
 }
 
 # Apply horizontal smushing rules.
@@ -96,14 +96,14 @@ def calc-overlap [
     let max_per_row = $left | zip $right | each {|pair|
         let l_row = $pair.0
         let r_row = $pair.1
-        let l_len = $l_row | str length
-        let r_len = $r_row | str length
+        let l_len = $l_row | str length -g
+        let r_len = $r_row | str length -g
 
         # Count trailing blanks on left (hardblanks are NOT blank for horizontal ops)
-        let l_trail = $l_row | str replace -r '.*?( *)$' '$1' | str length
+        let l_trail = $l_row | str replace -r '.*?( *)$' '$1' | str length -g
 
         # Count leading blanks on right
-        let r_lead = $r_row | str replace -r '^( *).*' '$1' | str length
+        let r_lead = $r_row | str replace -r '^( *).*' '$1' | str length -g
 
         let fit_amount = $l_trail + $r_lead
 
@@ -233,11 +233,11 @@ export def render-text [
     if $mode in ['fit' 'smush'] {
         let min_lead = $lines
         | where { str trim | is-not-empty }
-        | each {|line| $line | str replace -r '^( *).*' '$1' | str length }
+        | each {|line| $line | str replace -r '^( *).*' '$1' | str length -g }
         | math min
         | default 0
         if $min_lead > 0 {
-            $lines | each { str substring $min_lead.. } | str join (char nl)
+            $lines | each { str substring -g $min_lead.. } | str join (char nl)
         } else {
             $lines | str join (char nl)
         }
