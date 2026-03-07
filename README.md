@@ -36,8 +36,41 @@ nulet "Hello World" -f Standard
 # List available fonts
 nu nulet/mod.nu fonts
 
-# Showcase fonts
+# Font info (header, layout mode, char count)
+nu nulet/mod.nu info -f Big
+
+# Preview a font
+nu nulet/mod.nu preview -f Slant
+
+# Showcase random fonts
 nu nulet/mod.nu showcase -t "Hi"
+nu nulet/mod.nu showcase -t "Hi" --all-fonts    # render all fonts
+nu nulet/mod.nu showcase -t "Hi" -n 10          # 10 random fonts
+```
+
+### Color
+
+All rendering commands support `--color (-c)`, `--gradient (-g)`, and `--reverse (-r)`:
+
+```nushell
+# Solid color (named or hex)
+nu nulet/mod.nu "Hello" -f Standard --color red
+nu nulet/mod.nu "Hello" -f Standard --color '#ff6600'
+
+# Rainbow
+nu nulet/mod.nu "Hello" -f Standard --color rainbow
+
+# Gradient presets: g-sunset, g-ocean, g-fire, g-ice, g-neon, g-pastel, g-gold, g-matrix
+nu nulet/mod.nu "Hello" -f Standard --color g-sunset
+
+# Custom gradient between two colors
+nu nulet/mod.nu "Hello" -f Standard --color 'red:blue'
+
+# Vertical gradient
+nu nulet/mod.nu "Hello" -f Standard --color g-ocean --gradient vertical
+
+# Reverse gradient (long arc around the hue circle)
+nu nulet/mod.nu "Hello" -f Standard --color 'red:blue' --reverse
 ```
 
 ## Development
