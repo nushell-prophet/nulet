@@ -96,34 +96,14 @@ def calc-overlap [
     let max_per_row = $left | zip $right | each {|pair|
         let l_row = $pair.0
         let r_row = $pair.1
-        let l_chars = $l_row | split chars
-        let r_chars = $r_row | split chars
-        let l_len = $l_chars | length
-        let r_len = $r_chars | length
+        let l_len = $l_row | str length
+        let r_len = $r_row | str length
 
         # Count trailing blanks on left (hardblanks are NOT blank for horizontal ops)
-        mut l_trail = 0
-        mut i = $l_len - 1
-        while $i >= 0 {
-            if ($l_chars | get $i) == ' ' {
-                $l_trail = $l_trail + 1
-                $i = $i - 1
-            } else {
-                break
-            }
-        }
+        let l_trail = $l_row | str replace -r '.*?( *)$' '$1' | str length
 
         # Count leading blanks on right
-        mut r_lead = 0
-        mut j = 0
-        while $j < $r_len {
-            if ($r_chars | get $j) == ' ' {
-                $r_lead = $r_lead + 1
-                $j = $j + 1
-            } else {
-                break
-            }
-        }
+        let r_lead = $r_row | str replace -r '^( *).*' '$1' | str length
 
         let fit_amount = $l_trail + $r_lead
 
@@ -132,6 +112,8 @@ def calc-overlap [
             let smush_col_l = $l_len - $l_trail - 1
             let smush_col_r = $r_lead
             if $smush_col_l >= 0 and $smush_col_r < $r_len {
+                let l_chars = $l_row | split chars
+                let r_chars = $r_row | split chars
                 let lc = $l_chars | get $smush_col_l
                 let rc = $r_chars | get $smush_col_r
                 let result = smush-char $lc $rc $hardblank $rules $old_smush
@@ -251,12 +233,7 @@ export def render-text [
     if $mode in ['fit' 'smush'] {
         let min_lead = $lines
         | where { str trim | is-not-empty }
-        | each {|line|
-            let chars = $line | split chars
-            mut n = 0
-            for c in $chars { if $c == ' ' { $n = $n + 1 } else { break } }
-            $n
-        }
+        | each {|line| $line | str replace -r '^( *).*' '$1' | str length }
         | math min
         | default 0
         if $min_lead > 0 {
