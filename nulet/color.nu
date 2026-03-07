@@ -63,6 +63,72 @@ def fg [rgb: list<int>]: nothing -> string {
     $"(ansi escape)[38;2;($rgb.0);($rgb.1);($rgb.2)m"
 }
 
+# --- HSL conversions ---
+
+# Convert RGB [0-255] to HSL {h: 0-360, s: 0-1, l: 0-1}
+def rgb-to-hsl [rgb: list<int>]: nothing -> record {
+    let r = ($rgb.0 | into float) / 255.0
+    let g = ($rgb.1 | into float) / 255.0
+    let b = ($rgb.2 | into float) / 255.0
+    let cmax = [$r $g $b] | math max
+    let cmin = [$r $g $b] | math min
+    let delta = $cmax - $cmin
+    let l = ($cmax + $cmin) / 2.0
+
+    if $delta < 0.001 {
+        {h: 0.0, s: 0.0, l: $l}
+    } else {
+        let s = $delta / (1.0 - ((2.0 * $l - 1.0) | math abs))
+        let max_ch = if $r >= $g and $r >= $b { 0 } else if $g >= $b { 1 } else { 2 }
+        let h_raw = match $max_ch {
+            0 => { 60.0 * (($g - $b) / $delta) }
+            1 => { 60.0 * (($b - $r) / $delta + 2.0) }
+            _ => { 60.0 * (($r - $g) / $delta + 4.0) }
+        }
+        let h = if $h_raw < 0.0 { $h_raw + 360.0 } else { $h_raw }
+        {h: $h, s: $s, l: $l}
+    }
+}
+
+# Convert HSL to RGB [0-255]
+def hsl-to-rgb [h: float, s: float, l: float]: nothing -> list<int> {
+    if $s < 0.001 {
+        let v = ($l * 255.0) | math round | into int
+        return [$v, $v, $v]
+    }
+    let c = (1.0 - ((2.0 * $l - 1.0) | math abs)) * $s
+    let h_prime = $h / 60.0
+    let h_mod2 = $h_prime - 2.0 * ($h_prime / 2.0 | math floor)
+    let x = $c * (1.0 - (($h_mod2 - 1.0) | math abs))
+    let m = $l - $c / 2.0
+    let sector = $h_prime | math floor | into int
+    let rgb1 = match ($sector mod 6) {
+        0 => { [$c, $x, 0.0] }
+        1 => { [$x, $c, 0.0] }
+        2 => { [0.0, $c, $x] }
+        3 => { [0.0, $x, $c] }
+        4 => { [$x, 0.0, $c] }
+        _ => { [$c, 0.0, $x] }
+    }
+    $rgb1 | each { (($in + $m) * 255.0) | math round | into int }
+}
+
+# Interpolate hue along the long arc of the color circle
+def hue-long-arc [h1: float, h2: float, t: float]: nothing -> float {
+    let diff = $h2 - $h1
+    let h_interp = if ($diff | math abs) <= 180.0 {
+        # Direct path is short — go the other way
+        if $diff >= 0.0 { $h1 + ($h2 - 360.0 - $h1) * $t } else { $h1 + ($h2 + 360.0 - $h1) * $t }
+    } else {
+        # Direct path is already long
+        $h1 + $diff * $t
+    }
+    # Normalize to [0, 360)
+    $h_interp - 360.0 * ($h_interp / 360.0 | math floor)
+}
+
+# --- Color application ---
+
 # Rainbow RGB for position t in [0, 1]
 def rainbow-rgb [t: float]: nothing -> list<int> {
     let h = $t * 6.0
@@ -136,26 +202,49 @@ def resolve-gradient [spec: string]: nothing -> record {
 #   "rainbow"    — rainbow gradient
 #   "sunset"     — named gradient preset (sunset, ocean, fire, ice, neon, pastel, gold, matrix)
 #   "red:blue"   — gradient between two colors
+#
+# With --reverse, two-color gradients traverse the long arc of the hue circle
+# instead of the short path. For rainbow, it reverses the cycle direction.
 export def colorize [
     spec: string          # Color spec
     --direction: string   # horizontal (default) or vertical
+    --reverse (-r)        # Long arc around the hue circle (gradients) or reverse (rainbow)
 ]: string -> string {
     let text = $in
     let dir = $direction | default "horizontal"
     let lines = $text | lines
 
     if $spec == "rainbow" {
+        let fn = if $reverse { {|t| rainbow-rgb (1.0 - $t) } } else { {|t| rainbow-rgb $t } }
         if $dir == "vertical" {
-            color-vertical $lines {|t| rainbow-rgb $t }
+            color-vertical $lines $fn
         } else {
-            color-horizontal $lines {|t| rainbow-rgb $t }
+            color-horizontal $lines $fn
         }
     } else if ($spec in ($GRADIENT_PRESETS | columns)) or ($spec | str contains ':') {
         let g = resolve-gradient $spec
-        if $dir == "vertical" {
-            color-vertical $lines {|t| lerp-rgb $g.start $g.end $t }
+        if $reverse {
+            # Long arc — interpolate through HSL hue circle
+            let hsl1 = rgb-to-hsl $g.start
+            let hsl2 = rgb-to-hsl $g.end
+            let fn = {|t|
+                let h = hue-long-arc $hsl1.h $hsl2.h $t
+                let s = $hsl1.s + ($hsl2.s - $hsl1.s) * $t
+                let l = $hsl1.l + ($hsl2.l - $hsl1.l) * $t
+                hsl-to-rgb $h $s $l
+            }
+            if $dir == "vertical" {
+                color-vertical $lines $fn
+            } else {
+                color-horizontal $lines $fn
+            }
         } else {
-            $text | ansi gradient --fgstart ($g.start | rgb-to-hex) --fgend ($g.end | rgb-to-hex)
+            # Short path — RGB interpolation
+            if $dir == "vertical" {
+                color-vertical $lines {|t| lerp-rgb $g.start $g.end $t }
+            } else {
+                $text | ansi gradient --fgstart ($g.start | rgb-to-hex) --fgend ($g.end | rgb-to-hex)
+            }
         }
     } else {
         # Solid color
