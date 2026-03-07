@@ -96,6 +96,11 @@ def parse-code-tag []: string -> int {
 # Use --all-chars to also parse code-tagged characters (Unicode/extended),
 # which can be slow for large CJK fonts with thousands of glyphs.
 export def load-font [path: string, --all-chars]: nothing -> record {
+    # Fast path: pre-compiled JSON font
+    if ($path | str ends-with '.json') {
+        return (open $path)
+    }
+
     let raw = if (open --raw $path | bytes at 0..<2) == (0x[504B]) {
         # Zip-compressed FIGfont (used by PhMajerus/FIGfonts)
         let size = ^unzip -l $path | parse --regex '(\d+)\s+\d+ file' | get capture0.0 | into int
@@ -113,7 +118,9 @@ export def load-font [path: string, --all-chars]: nothing -> record {
     | if $has_ansi { each { ansi strip } } else { }
     let header = $all_lines | first | parse-header
     let height = $header.height
+    let comment_start = 1
     let data_start = 1 + $header.comment_lines
+    let comments = $all_lines | skip $comment_start | first $header.comment_lines
     let data_lines = $all_lines | skip $data_start
 
     # Required character codes: ASCII 32-126, then Deutsch
@@ -147,5 +154,5 @@ export def load-font [path: string, --all-chars]: nothing -> record {
         $chars
     }
 
-    {header: $header, chars: $chars}
+    {comments: $comments, header: $header, chars: $chars}
 }

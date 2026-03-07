@@ -3,6 +3,7 @@
 export def main [] {
     print "Available commands:"
     print "  toolkit.nu setup    — fetch font submodules"
+    print "  toolkit.nu compile  — pre-compile fonts to JSON for fast loading"
     print "  toolkit.nu test     — run tests against figlet"
 }
 
@@ -13,6 +14,47 @@ export def "main setup" [] {
     # Only check out the fonts/ directory from FIGfonts
     ^git -C font-submodules/FIGfonts sparse-checkout set fonts
     print "Done."
+}
+
+# Pre-compile .flf fonts to JSON for ~25x faster loading
+#
+# Compiles all discovered fonts (bundled + system) into compiled/ as JSON.
+# Comment lines (licenses, credits) from the original .flf are preserved.
+export def "main compile" [
+    --font (-f): string  # Compile a specific font (default: all)
+] {
+    use nulet/parse.nu [load-font]
+    use nulet/fonts.nu [all-font-files, font-display-name]
+    let out_dir = $env.FILE_PWD | path join 'compiled'
+    mkdir $out_dir
+
+    let fonts = if $font != null {
+        all-font-files | where { $in.name | font-display-name | $in == $font }
+    } else {
+        all-font-files
+    }
+    | insert display { $in.name | font-display-name }
+    | uniq-by display
+
+    let results = $fonts | par-each --keep-order {|f|
+        let name = $f.name | font-display-name
+        try {
+            let parsed = load-font $f.name
+            let out_path = $out_dir | path join $"($name).json"
+            $parsed | to json | save -f $out_path
+            {font: $name, status: "ok"}
+        } catch {|e|
+            {font: $name, status: $"error: ($e.msg)"}
+        }
+    }
+
+    let ok = $results | where status == "ok" | length
+    let errors = $results | where status != "ok"
+    print $"Compiled ($ok)/($results | length) fonts to compiled/"
+    if not ($errors | is-empty) {
+        print "\nFailed:"
+        $errors | print
+    }
 }
 
 # Run tests comparing nulet output against figlet
