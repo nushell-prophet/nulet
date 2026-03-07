@@ -6,61 +6,11 @@
 #   Subcommands:                nu nulet/mod.nu fonts
 #                               nu nulet/mod.nu info -f Big
 #                               nu nulet/mod.nu preview -f Slant
-#                               nu nulet/mod.nu showcase -t "Hi"
+#   Module mode:                use nulet; nulet showcase -t "Hi"
 
 export use render.nu [render-text]
-use parse.nu [load-font, parse-header, layout-mode, char-to-code]
-
-const FONTS_DIR = (path self | path dirname | path join '..' 'figlet-fonts')
-const DEFAULT_FONT = 'Small.flf'
-
-# Get system figlet font directory, or null if figlet is not installed
-def system-font-dir []: nothing -> any {
-    try { ^figlet -I2 | str trim } catch { null }
-}
-
-# Directories to search for .flf font files (bundled + system)
-def font-dirs []: nothing -> list<string> {
-    let sys = system-font-dir
-    if $sys != null and ($sys | path exists) {
-        [$FONTS_DIR $sys]
-    } else {
-        [$FONTS_DIR]
-    }
-}
-
-# Strip .flf extension to get a display name
-def font-display-name []: string -> string {
-    path basename | str replace '.flf' ''
-}
-
-# Collect all .flf files from bundled + system font directories
-def all-font-files []: nothing -> table {
-    font-dirs | each {|d| try { ls $d | where name =~ '\.flf$' } catch { [] } } | flatten
-}
-
-# Complete font names from all known font directories
-def font-names []: nothing -> list<string> {
-    all-font-files
-    | each { get name | font-display-name }
-    | uniq
-    | sort
-    | each {|name| if ($name | str contains ' ') { $"'($name)'" } else { $name } }
-}
-
-# Resolve font path: absolute path, relative path, or font name in known directories
-def resolve-font [font: string] {
-    if ($font | path exists) {
-        return $font
-    }
-    for dir in (font-dirs) {
-        let candidate = $dir | path join $font
-        if ($candidate | path exists) { return $candidate }
-        let with_ext = $dir | path join ($font + '.flf')
-        if ($with_ext | path exists) { return $with_ext }
-    }
-    error make {msg: $"Font not found: ($font). Use `nulet fonts` to list available fonts."}
-}
+use parse.nu [load-font, layout-mode]
+use fonts.nu [DEFAULT_FONT, font-display-name, all-font-files, font-names, resolve-font]
 
 # Render text as FIGlet ASCII art
 export def main [
@@ -97,7 +47,7 @@ def "main info" [
 }
 
 # Showcase all fonts with sample text
-export def "main showcase" [
+export def showcase [
     --text (-t): string   # Sample text (default: "Hello")
 ]: nothing -> record {
     let sample = $text | default "Hello"
