@@ -1,6 +1,9 @@
 # Font discovery, resolution, and completions
 
-const FONTS_DIR = (path self | path dirname | path join '..' 'figlet-fonts')
+const BUNDLED_FONT_DIRS = [
+    (path self | path dirname | path join '..' 'figlet-fonts'),
+    (path self | path dirname | path join '..' 'FIGfonts' 'fonts'),
+]
 export const DEFAULT_FONT = 'Small.flf'
 
 # Get system figlet font directory, or null if figlet is not installed
@@ -11,11 +14,12 @@ def system-font-dir []: nothing -> any {
 # Directories to search for .flf font files (bundled + system)
 def font-dirs []: nothing -> list<string> {
     let sys = system-font-dir
-    if $sys != null and ($sys | path exists) {
-        [$FONTS_DIR $sys]
+    let dirs = if $sys != null and ($sys | path exists) {
+        $BUNDLED_FONT_DIRS | append $sys
     } else {
-        [$FONTS_DIR]
+        $BUNDLED_FONT_DIRS
     }
+    $dirs | where { path exists }
 }
 
 # Strip .flf extension to get a display name

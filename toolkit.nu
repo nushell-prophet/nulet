@@ -2,14 +2,16 @@
 
 export def main [] {
     print "Available commands:"
-    print "  toolkit.nu setup    — fetch figlet-fonts submodule"
+    print "  toolkit.nu setup    — fetch font submodules"
     print "  toolkit.nu test     — run tests against figlet"
 }
 
-# Fetch the figlet-fonts submodule
+# Fetch font submodules (figlet-fonts, FIGfonts)
 export def "main setup" [] {
-    print "Initializing figlet-fonts submodule..."
+    print "Initializing font submodules..."
     ^git submodule update --init
+    # Only check out the fonts/ directory from FIGfonts
+    ^git -C FIGfonts sparse-checkout set fonts
     print "Done."
 }
 
