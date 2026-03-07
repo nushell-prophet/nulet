@@ -81,14 +81,16 @@ export def "main showcase" [
     ls $FONTS_DIR
     | where name =~ '\.flf$'
     | sort-by name
-    | reduce --fold {} {|f, acc|
+    | par-each --keep-order {|f|
         let name = $f.name | path basename | str replace '.flf' ''
         try {
-            $acc | upsert $name (render-text $sample (load-font $f.name))
+            [($name) (render-text $sample (load-font $f.name))]
         } catch {
-            $acc
+            null
         }
     }
+    | compact
+    | into record
 }
 
 # Preview a font with sample text
