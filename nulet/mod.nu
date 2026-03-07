@@ -21,6 +21,7 @@ export def main [
     --layout (-l): string    # Layout mode: full, fit, smush
     --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
     --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
+    --reverse (-r)        # Reverse the gradient direction
 ]: nothing -> string {
     if ($text | is-empty) {
         error make {msg: "No text provided. Usage: nulet <text> [-f font] [-l layout]"}
@@ -30,7 +31,7 @@ export def main [
     let input = $text | str join ' ' | str replace --all '\n' (char nl)
     let result = render-text $input $f --layout-override $layout
     if $color != null {
-        $result | colorize $color --direction $gradient
+        $result | colorize $color --direction $gradient --reverse=$reverse
     } else {
         $result
     }
@@ -61,6 +62,7 @@ export def showcase [
     --text (-t): string   # Sample text (default: "Hello")
     --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
     --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
+    --reverse (-r)        # Reverse the gradient direction
 ]: nothing -> record {
     let sample = $text | default "Hello"
     all-font-files
@@ -70,7 +72,7 @@ export def showcase [
         try {
             let rendered = render-text $sample (load-font $f.name)
             let result = if $color != null {
-                $rendered | colorize $color --direction $gradient
+                $rendered | colorize $color --direction $gradient --reverse=$reverse
             } else {
                 $rendered
             }
@@ -89,13 +91,14 @@ def "main preview" [
     --text (-t): string   # Sample text (default: font name)
     --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
     --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
+    --reverse (-r)        # Reverse the gradient direction
 ]: nothing -> string {
     let font_file = $font | default $DEFAULT_FONT
     let sample = $text | default ($font_file | str replace '.flf' '')
     let f = load-font (resolve-font $font_file)
     let result = render-text $sample $f
     if $color != null {
-        $result | colorize $color --direction $gradient
+        $result | colorize $color --direction $gradient --reverse=$reverse
     } else {
         $result
     }
