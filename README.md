@@ -10,6 +10,8 @@ nu toolkit.nu setup
 
 This fetches bundled fonts from [xero/figlet-fonts](https://github.com/xero/figlet-fonts) and [PhMajerus/FIGfonts](https://github.com/PhMajerus/FIGfonts) into `font-submodules/`. System figlet fonts (from `figlet -I2`) are also discovered at runtime.
 
+A vendored `Small` font in `fonts/` ensures nulet works out of the box without submodules or system figlet.
+
 ## Demo
 
 ```nu

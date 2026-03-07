@@ -1,5 +1,6 @@
 # Font discovery, resolution, and completions
 
+const VENDOR_FONT_DIR = (path self | path dirname | path join '..' 'fonts')
 const BUNDLED_FONT_DIRS = [
     (path self | path dirname | path join '..' 'font-submodules' 'figlet-fonts'),
     (path self | path dirname | path join '..' 'font-submodules' 'FIGfonts' 'fonts'),
@@ -19,7 +20,9 @@ def font-dirs []: nothing -> list<string> {
     } else {
         $BUNDLED_FONT_DIRS
     }
-    $dirs | where { path exists }
+    $dirs
+    | append $VENDOR_FONT_DIR
+    | where { path exists }
 }
 
 # Strip .flf extension to get a display name
