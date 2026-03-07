@@ -29,7 +29,7 @@ export def font-display-name []: string -> string {
 
 # Collect all .flf files from bundled + system font directories
 export def all-font-files []: nothing -> table {
-    font-dirs | each {|d| if ($d | path exists) { ls $d | where name =~ '\.flf$' } else { [] } } | flatten
+    font-dirs | each {|d| try { ls $d | where name =~ '\.flf$' } catch { [] } } | flatten
 }
 
 # Complete font names from all known font directories
