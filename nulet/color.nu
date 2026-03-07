@@ -15,14 +15,14 @@ const NAMED_COLORS = {
 }
 
 const GRADIENT_PRESETS = {
-    sunset: { start: [255, 69, 0], end: [255, 20, 147] }
-    ocean: { start: [0, 105, 148], end: [64, 201, 255] }
-    fire: { start: [255, 0, 0], end: [255, 255, 0] }
-    ice: { start: [224, 247, 250], end: [0, 145, 234] }
-    neon: { start: [57, 255, 20], end: [255, 0, 255] }
-    pastel: { start: [255, 182, 193], end: [135, 206, 235] }
-    gold: { start: [255, 140, 0], end: [255, 215, 0] }
-    matrix: { start: [0, 51, 0], end: [0, 255, 0] }
+    g-sunset: { start: [255, 69, 0], end: [255, 20, 147] }
+    g-ocean: { start: [0, 105, 148], end: [64, 201, 255] }
+    g-fire: { start: [255, 0, 0], end: [255, 255, 0] }
+    g-ice: { start: [224, 247, 250], end: [0, 145, 234] }
+    g-neon: { start: [57, 255, 20], end: [255, 0, 255] }
+    g-pastel: { start: [255, 182, 193], end: [135, 206, 235] }
+    g-gold: { start: [255, 140, 0], end: [255, 215, 0] }
+    g-matrix: { start: [0, 51, 0], end: [0, 255, 0] }
 }
 
 # Color and gradient names for shell completion
@@ -200,7 +200,7 @@ def resolve-gradient [spec: string]: nothing -> record {
 #   "red"        — solid named color
 #   "#ff6600"    — solid hex color
 #   "rainbow"    — rainbow gradient
-#   "sunset"     — named gradient preset (sunset, ocean, fire, ice, neon, pastel, gold, matrix)
+#   "g-sunset"   — named gradient preset (g-sunset, g-ocean, g-fire, g-ice, g-neon, g-pastel, g-gold, g-matrix)
 #   "red:blue"   — gradient between two colors
 #
 # With --reverse, two-color gradients traverse the long arc of the hue circle
