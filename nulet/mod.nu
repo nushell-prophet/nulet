@@ -8,8 +8,9 @@
 #                               nu nulet/mod.nu preview -f Slant
 #                               nu nulet/mod.nu showcase -t "Hi"
 
-export use parse.nu [load-font, parse-header, layout-mode, char-to-code]
+export use parse.nu [load-font]
 export use render.nu [render-text]
+use parse.nu [parse-header, layout-mode, char-to-code]
 
 const FONTS_DIR = (path self | path dirname | path join '..' 'figlet-fonts')
 const DEFAULT_FONT = 'Small.flf'
