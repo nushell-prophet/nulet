@@ -10,6 +10,17 @@ nu toolkit.nu setup
 
 This fetches bundled fonts from [xero/figlet-fonts](https://github.com/xero/figlet-fonts) and [PhMajerus/FIGfonts](https://github.com/PhMajerus/FIGfonts) into `font-submodules/`. System figlet fonts (from `figlet -I2`) are also discovered at runtime.
 
+## Demo
+
+```nu
+> nu nulet/mod.nu "Hello World" -f Standard
+ _   _      _ _        __        __         _     _
+| | | | ___| | | ___   \ \      / /__  _ __| | __| |
+| |_| |/ _ \ | |/ _ \   \ \ /\ / / _ \| '__| |/ _` |
+|  _  |  __/ | | (_) |   \ V  V / (_) | |  | | (_| |
+|_| |_|\___|_|_|\___/     \_/\_/ \___/|_|  |_|\__,_|
+```
+
 ## Usage
 
 ```nushell
