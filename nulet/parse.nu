@@ -85,11 +85,6 @@ export def layout-mode [header: record]: nothing -> record {
     }
 }
 
-# Parse a code tag line, returning the character code
-def parse-code-tag []: string -> int {
-    $in | str trim | split row ' ' | first | str downcase | into int
-}
-
 # Load and parse a FIGfont file
 export def load-font [path: string]: nothing -> record {
     let raw = open --raw $path
@@ -117,7 +112,9 @@ export def load-font [path: string]: nothing -> record {
     let total = $data_lines | length
     while $idx < $total {
         let tag_line = $data_lines | get $idx
-        let code = try { $tag_line | parse-code-tag } catch { break }
+        let token = $tag_line | str trim | split row ' ' | first
+        if not ($token =~ '^(?:0[xX][0-9a-fA-F]+|0[oO]?[0-7]+|\d+)$') { break }
+        let code = $token | str downcase | into int
         $idx = $idx + 1
         if ($idx + $height) > $total { break }
         let fig_lines = $data_lines | skip $idx | first $height | each { strip-endmarks }
