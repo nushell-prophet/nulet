@@ -111,10 +111,15 @@ export def load-font [path: string, --all-chars]: nothing -> record {
     } else {
         open --raw $path
     }
+    # Decode binary to string — non-UTF-8 fonts (Latin-1 etc.) arrive as binary from `open --raw`
+    let raw = if ($raw | describe) == 'binary' {
+        try { $raw | decode utf-8 } catch { $raw | decode iso-8859-1 }
+    } else {
+        $raw
+    }
     # Strip ANSI escape sequences only when font data actually contains them.
-    # A crafted .flf could embed terminal control codes; most fonts don't.
     let has_ansi = $raw | str contains (char --integer 27)
-    let all_lines = try { $raw | lines } catch { $raw | decode latin1 | lines }
+    let all_lines = $raw | lines
     | if $has_ansi { each { ansi strip } } else { }
     let header = $all_lines | first | parse-header
     let height = $header.height
