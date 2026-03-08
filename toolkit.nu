@@ -41,7 +41,7 @@ def compile-fonts [
     let results = $fonts | par-each --keep-order {|f|
         let name = $f.name | font-display-name
         try {
-            let parsed = load-font $f.name
+            let parsed = load-font --all-chars $f.name
             let out_path = $out_dir | path join $"($name).json"
             $parsed | to json | save -f $out_path
             {font: $name, status: "ok"}
