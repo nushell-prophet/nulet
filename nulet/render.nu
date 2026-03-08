@@ -65,8 +65,8 @@ def smush-char [
     # Rule 5: Big X smushing
     if ($rules bit-and 16) != 0 {
         let pair = [$left $right] | str join
-        if $pair == '/\\' { return '|' }
-        if $pair == '\\/' { return 'Y' }
+        if $pair == '/\' { return '|' }
+        if $pair == '\/' { return 'Y' }
         if $pair == '><' { return 'X' }
     }
 
