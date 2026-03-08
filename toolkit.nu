@@ -2,13 +2,12 @@
 
 export def main [] {
     print "Available commands:"
-    print "  toolkit.nu setup    — fetch font submodules + compile fonts"
-    print "  toolkit.nu compile  — pre-compile fonts to JSON for fast loading"
-    print "  toolkit.nu test     — run tests against figlet"
+    print "  toolkit.nu setup-fonts — fetch font submodules + compile fonts"
+    print "  toolkit.nu test        — run tests against figlet"
 }
 
 # Fetch font submodules and compile fonts
-export def "main setup" [
+export def "main setup-fonts" [
     --no-compile  # Skip font pre-compilation step
 ] {
     print "Initializing font submodules..."
@@ -17,16 +16,13 @@ export def "main setup" [
     ^git -C font-submodules/FIGfonts sparse-checkout set fonts
     if not $no_compile {
         print "Compiling fonts..."
-        main compile
+        compile-fonts
     }
     print "Done."
 }
 
 # Pre-compile .flf fonts to JSON for ~25x faster loading
-#
-# Compiles all discovered fonts (bundled + system) into compiled/ as JSON.
-# Comment lines (licenses, credits) from the original .flf are preserved.
-export def "main compile" [
+def compile-fonts [
     --font (-f): string  # Compile a specific font (default: all)
 ] {
     use nulet/parse.nu [load-font]

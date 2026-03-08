@@ -9,7 +9,7 @@ nulet is a FIGlet text renderer implemented as a Nushell module. It parses FIGfo
 ## Setup
 
 ```bash
-git submodule update --init   # or: nu toolkit.nu setup
+git submodule update --init   # or: nu toolkit.nu setup-fonts
 ```
 
 This fetches font submodules in `font-submodules/` ([xero/figlet-fonts](https://github.com/xero/figlet-fonts) and [PhMajerus/FIGfonts](https://github.com/PhMajerus/FIGfonts)). System figlet fonts (from `figlet -I2`) are also discovered at runtime.
