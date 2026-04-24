@@ -8,20 +8,20 @@
 #                               nu nulet/mod.nu preview -f Slant
 #   Module mode:                use nulet; nulet showcase -t "Hi"
 
-export use render.nu [render-text]
-export use color.nu [colorize]
-use parse.nu [load-font, layout-mode]
-use fonts.nu [DEFAULT_FONT, font-display-name, all-font-files, font-names, resolve-font]
-use color.nu [color-names, gradient-names]
+export use render.nu [ render-text ]
+export use color.nu [ colorize ]
+use parse.nu [ load-font layout-mode ]
+use fonts.nu [ DEFAULT_FONT font-display-name all-font-files font-names resolve-font ]
+use color.nu [ color-names gradient-names ]
 
 # Render text as FIGlet ASCII art
 export def main [
-    ...text: string          # Text to render (joined with spaces)
-    --font (-f): string@font-names  # Font name or path to .flf file
-    --layout (-l): string    # Layout mode: full, fit, smush
-    --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
-    --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
-    --reverse (-r)        # Reverse the gradient direction
+    ...text: string # Text to render (joined with spaces)
+    --font (-f): string@font-names # Font name or path to .flf file
+    --layout (-l): string # Layout mode: full, fit, smush
+    --color (-c): string@color-names # Color: name, "rainbow", or "from:to" gradient
+    --gradient (-g): string@gradient-names # Direction: horizontal (default) or vertical
+    --reverse (-r) # Reverse the gradient direction
 ]: nothing -> string {
     if ($text | is-empty) {
         error make {msg: "No text provided. Usage: nulet <text> [-f font] [-l layout]"}
@@ -49,7 +49,7 @@ def "main fonts" []: nothing -> table {
 
 # Show font info (header + layout mode)
 def "main info" [
-    --font (-f): string@font-names  # Font name or path
+    --font (-f): string@font-names # Font name or path
 ]: nothing -> record {
     let font_path = resolve-font ($font | default $DEFAULT_FONT)
     let f = load-font $font_path
@@ -62,12 +62,12 @@ def "main info" [
 # By default, displays 5 random fonts. Use --all-fonts to render every
 # installed font (with ~400 fonts this takes 6 seconds or more).
 export def showcase [
-    --text (-t): string   # Sample text (default: "Hello")
-    --all-fonts (-a)      # Render all fonts instead of a random sample
-    --num (-n): int        # Number of random fonts to show (default: 5)
-    --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
-    --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
-    --reverse (-r)        # Reverse the gradient direction
+    --text (-t): string # Sample text (default: "Hello")
+    --all-fonts (-a) # Render all fonts instead of a random sample
+    --num (-n): int # Number of random fonts to show (default: 5)
+    --color (-c): string@color-names # Color: name, "rainbow", or "from:to" gradient
+    --gradient (-g): string@gradient-names # Direction: horizontal (default) or vertical
+    --reverse (-r) # Reverse the gradient direction
 ]: nothing -> record {
     let sample = $text | default "Hello"
     let fonts = all-font-files | sort-by name
@@ -97,11 +97,11 @@ export def showcase [
 
 # Preview a font with sample text
 def "main preview" [
-    --font (-f): string@font-names   # Font name or path
-    --text (-t): string   # Sample text (default: font name)
-    --color (-c): string@color-names  # Color: name, "rainbow", or "from:to" gradient
-    --gradient (-g): string@gradient-names  # Direction: horizontal (default) or vertical
-    --reverse (-r)        # Reverse the gradient direction
+    --font (-f): string@font-names # Font name or path
+    --text (-t): string # Sample text (default: font name)
+    --color (-c): string@color-names # Color: name, "rainbow", or "from:to" gradient
+    --gradient (-g): string@gradient-names # Direction: horizontal (default) or vertical
+    --reverse (-r) # Reverse the gradient direction
 ]: nothing -> string {
     let font_file = $font | default $DEFAULT_FONT
     let sample = $text | default ($font_file | str replace '.flf' '')

@@ -70,17 +70,17 @@ export def layout-mode [header: record]: nothing -> record {
             "full"
         }
         # New-style: controlled smushing falls back to fitting
-        {mode: $mode, rules: $h_rules, old_smush: false}
+        {mode: $mode rules: $h_rules old_smush: false}
     } else {
         # Full_Layout absent — derive from Old_Layout
         # Old_Layout > 0: controlled smushing with those rules (matches figlet 2.2)
         let ol = $header.old_layout
         if $ol == -1 {
-            {mode: "full", rules: 0, old_smush: false}
+            {mode: "full" rules: 0 old_smush: false}
         } else if $ol == 0 {
-            {mode: "fit", rules: 0, old_smush: false}
+            {mode: "fit" rules: 0 old_smush: false}
         } else {
-            {mode: "smush", rules: $ol, old_smush: false}
+            {mode: "smush" rules: $ol old_smush: false}
         }
     }
 }
@@ -95,7 +95,7 @@ def parse-code-tag []: string -> int {
 # By default, only required characters (ASCII 32-126 + Deutsch) are parsed.
 # Use --all-chars to also parse code-tagged characters (Unicode/extended),
 # which can be slow for large CJK fonts with thousands of glyphs.
-export def load-font [path: string, --all-chars]: nothing -> record {
+export def load-font [path: string --all-chars]: nothing -> record {
     # Fast path: pre-compiled JSON font
     if ($path | str ends-with '.json') {
         return (open $path)
@@ -120,7 +120,7 @@ export def load-font [path: string, --all-chars]: nothing -> record {
     # Strip ANSI escape sequences only when font data actually contains them.
     let has_ansi = $raw | str contains (char --integer 27)
     let all_lines = $raw | lines
-    | if $has_ansi { each { ansi strip } } else { }
+        | if $has_ansi { each { ansi strip } } else { }
     let header = $all_lines | first | parse-header
     let height = $header.height
     let comment_start = 1
@@ -134,11 +134,11 @@ export def load-font [path: string, --all-chars]: nothing -> record {
 
     # Parse required FIGcharacters
     let chars = 0..<$n_required | each {|i|
-        let start = $i * $height
-        let fig_lines = $data_lines | skip $start | first $height | each { strip-endmarks }
-        let code = $required_codes | get $i
-        [($code | into string) $fig_lines]
-    } | into record
+            let start = $i * $height
+            let fig_lines = $data_lines | skip $start | first $height | each { strip-endmarks }
+            let code = $required_codes | get $i
+            [($code | into string) $fig_lines]
+        } | into record
 
     # Parse code-tagged FIGcharacters (only when --all-chars is set)
     let chars = if $all_chars {
@@ -159,5 +159,5 @@ export def load-font [path: string, --all-chars]: nothing -> record {
         $chars
     }
 
-    {comments: $comments, header: $header, chars: $chars}
+    {comments: $comments header: $header chars: $chars}
 }

@@ -1,28 +1,28 @@
 # ANSI color post-processing for FIGlet output
 
 const NAMED_COLORS = {
-    black: [0, 0, 0]
-    red: [255, 0, 0]
-    green: [0, 190, 0]
-    blue: [0, 100, 255]
-    yellow: [255, 255, 0]
-    cyan: [0, 255, 255]
-    magenta: [255, 0, 255]
-    white: [255, 255, 255]
-    orange: [255, 165, 0]
-    pink: [255, 105, 180]
-    purple: [128, 0, 128]
+    black: [0 0 0]
+    red: [255 0 0]
+    green: [0 190 0]
+    blue: [0 100 255]
+    yellow: [255 255 0]
+    cyan: [0 255 255]
+    magenta: [255 0 255]
+    white: [255 255 255]
+    orange: [255 165 0]
+    pink: [255 105 180]
+    purple: [128 0 128]
 }
 
 const GRADIENT_PRESETS = {
-    g-sunset: { start: [255, 69, 0], end: [255, 20, 147] }
-    g-ocean: { start: [0, 105, 148], end: [64, 201, 255] }
-    g-fire: { start: [255, 0, 0], end: [255, 255, 0] }
-    g-ice: { start: [224, 247, 250], end: [0, 145, 234] }
-    g-neon: { start: [57, 255, 20], end: [255, 0, 255] }
-    g-pastel: { start: [255, 182, 193], end: [135, 206, 235] }
-    g-gold: { start: [255, 140, 0], end: [255, 215, 0] }
-    g-matrix: { start: [0, 51, 0], end: [0, 255, 0] }
+    g-sunset: {start: [255 69 0] end: [255 20 147]}
+    g-ocean: {start: [0 105 148] end: [64 201 255]}
+    g-fire: {start: [255 0 0] end: [255 255 0]}
+    g-ice: {start: [224 247 250] end: [0 145 234]}
+    g-neon: {start: [57 255 20] end: [255 0 255]}
+    g-pastel: {start: [255 182 193] end: [135 206 235]}
+    g-gold: {start: [255 140 0] end: [255 215 0]}
+    g-matrix: {start: [0 51 0] end: [0 255 0]}
 }
 
 # Color and gradient names for shell completion
@@ -43,9 +43,11 @@ def resolve-color [spec: string]: nothing -> list<int> {
     let s = $spec | str downcase | str trim
     if ($s | str starts-with '#') {
         let hex = $s | str substring 1..
-        [($"0x($hex | str substring 0..1)" | into int)
-         ($"0x($hex | str substring 2..3)" | into int)
-         ($"0x($hex | str substring 4..5)" | into int)]
+        [
+            ($"0x($hex | str substring 0..1)" | into int)
+            ($"0x($hex | str substring 2..3)" | into int)
+            ($"0x($hex | str substring 4..5)" | into int)
+        ]
     } else if $s in ($NAMED_COLORS | columns) {
         $NAMED_COLORS | get $s
     } else {
@@ -76,7 +78,7 @@ def rgb-to-hsl [rgb: list<int>]: nothing -> record {
     let l = ($cmax + $cmin) / 2.0
 
     if $delta < 0.001 {
-        {h: 0.0, s: 0.0, l: $l}
+        {h: 0.0 s: 0.0 l: $l}
     } else {
         let s = $delta / (1.0 - ((2.0 * $l - 1.0) | math abs))
         let max_ch = if $r >= $g and $r >= $b { 0 } else if $g >= $b { 1 } else { 2 }
@@ -86,15 +88,15 @@ def rgb-to-hsl [rgb: list<int>]: nothing -> record {
             _ => { 60.0 * (($r - $g) / $delta + 4.0) }
         }
         let h = if $h_raw < 0.0 { $h_raw + 360.0 } else { $h_raw }
-        {h: $h, s: $s, l: $l}
+        {h: $h s: $s l: $l}
     }
 }
 
 # Convert HSL to RGB [0-255]
-def hsl-to-rgb [h: float, s: float, l: float]: nothing -> list<int> {
+def hsl-to-rgb [h: float s: float l: float]: nothing -> list<int> {
     if $s < 0.001 {
         let v = ($l * 255.0) | math round | into int
-        return [$v, $v, $v]
+        return [$v $v $v]
     }
     let c = (1.0 - ((2.0 * $l - 1.0) | math abs)) * $s
     let h_prime = $h / 60.0
@@ -103,18 +105,18 @@ def hsl-to-rgb [h: float, s: float, l: float]: nothing -> list<int> {
     let m = $l - $c / 2.0
     let sector = $h_prime | math floor | into int
     let rgb1 = match ($sector mod 6) {
-        0 => { [$c, $x, 0.0] }
-        1 => { [$x, $c, 0.0] }
-        2 => { [0.0, $c, $x] }
-        3 => { [0.0, $x, $c] }
-        4 => { [$x, 0.0, $c] }
-        _ => { [$c, 0.0, $x] }
+        0 => { [$c $x 0.0] }
+        1 => { [$x $c 0.0] }
+        2 => { [0.0 $c $x] }
+        3 => { [0.0 $x $c] }
+        4 => { [$x 0.0 $c] }
+        _ => { [$c 0.0 $x] }
     }
     $rgb1 | each { (($in + $m) * 255.0) | math round | into int }
 }
 
 # Interpolate hue along the long arc of the color circle
-def hue-long-arc [h1: float, h2: float, t: float]: nothing -> float {
+def hue-long-arc [h1: float h2: float t: float]: nothing -> float {
     let diff = $h2 - $h1
     let h_interp = if ($diff | math abs) <= 180.0 {
         # Direct path is short — go the other way
@@ -137,17 +139,17 @@ def rainbow-rgb [t: float]: nothing -> list<int> {
     let rise = ($f * 255) | math round | into int
     let fall = ((1.0 - $f) * 255) | math round | into int
     match ($sector mod 6) {
-        0 => { [255, $rise, 0] }
-        1 => { [$fall, 255, 0] }
-        2 => { [0, 255, $rise] }
-        3 => { [0, $fall, 255] }
-        4 => { [$rise, 0, 255] }
-        _ => { [255, 0, $fall] }
+        0 => { [255 $rise 0] }
+        1 => { [$fall 255 0] }
+        2 => { [0 255 $rise] }
+        3 => { [0 $fall 255] }
+        4 => { [$rise 0 255] }
+        _ => { [255 0 $fall] }
     }
 }
 
 # Linearly interpolate between two RGB colors
-def lerp-rgb [c1: list<int>, c2: list<int>, t: float]: nothing -> list<int> {
+def lerp-rgb [c1: list<int> c2: list<int> t: float]: nothing -> list<int> {
     [0 1 2] | each {|i|
         let a = $c1 | get $i | into float
         let b = $c2 | get $i | into float
@@ -156,7 +158,7 @@ def lerp-rgb [c1: list<int>, c2: list<int>, t: float]: nothing -> list<int> {
 }
 
 # Color each character per-column with a given RGB-from-position function
-def color-horizontal [lines: list<string>, rgb_fn: closure]: nothing -> string {
+def color-horizontal [lines: list<string> rgb_fn: closure]: nothing -> string {
     let reset = (ansi reset)
     let max_len = $lines | each { str length -g } | math max | default 1
     $lines | each {|line|
@@ -174,7 +176,7 @@ def color-horizontal [lines: list<string>, rgb_fn: closure]: nothing -> string {
 }
 
 # Color each line with a given RGB-from-position function
-def color-vertical [lines: list<string>, rgb_fn: closure]: nothing -> string {
+def color-vertical [lines: list<string> rgb_fn: closure]: nothing -> string {
     let reset = (ansi reset)
     let n = $lines | length
     $lines | enumerate | each {|e|
@@ -190,7 +192,7 @@ def resolve-gradient [spec: string]: nothing -> record {
         $GRADIENT_PRESETS | get $spec
     } else {
         let parts = $spec | split row ':'
-        { start: (resolve-color ($parts | first)), end: (resolve-color ($parts | last)) }
+        {start: (resolve-color ($parts | first)) end: (resolve-color ($parts | last))}
     }
 }
 
@@ -206,9 +208,9 @@ def resolve-gradient [spec: string]: nothing -> record {
 # With --reverse, two-color gradients traverse the long arc of the hue circle
 # instead of the short path. For rainbow, it reverses the cycle direction.
 export def colorize [
-    spec: string          # Color spec
-    --direction: string   # horizontal (default) or vertical
-    --reverse (-r)        # Long arc around the hue circle (gradients) or reverse (rainbow)
+    spec: string # Color spec
+    --direction: string # horizontal (default) or vertical
+    --reverse (-r) # Long arc around the hue circle (gradients) or reverse (rainbow)
 ]: string -> string {
     let text = $in
     let dir = $direction | default "horizontal"

@@ -1,6 +1,6 @@
 # FIGlet renderer — assembles FIGcharacters into FIGures
 
-use parse.nu [char-to-code, layout-mode]
+use parse.nu [ char-to-code layout-mode ]
 
 # Get the visible width of a FIGcharacter (width of its first line)
 def fig-width [fig: list<string>]: nothing -> int {
@@ -14,7 +14,7 @@ def smush-char [
     right: string
     hardblank: string
     rules: int
-    old_smush: bool  # Pre-2.2: universal fallback when rules don't match
+    old_smush: bool # Pre-2.2: universal fallback when rules don't match
 ]: nothing -> any {
     # Universal smushing: no rules, later char wins
     if $rules == 0 {
@@ -94,41 +94,41 @@ def calc-overlap [
 
     # For each row, find how far right can move left
     let max_per_row = $left | zip $right | each {|pair|
-        let l_row = $pair.0
-        let r_row = $pair.1
-        let l_len = $l_row | str length -g
-        let r_len = $r_row | str length -g
+            let l_row = $pair.0
+            let r_row = $pair.1
+            let l_len = $l_row | str length -g
+            let r_len = $r_row | str length -g
 
-        # Count trailing blanks on left (hardblanks are NOT blank for horizontal ops)
-        let l_trail = $l_len - ($l_row | str trim --right | str length -g)
+            # Count trailing blanks on left (hardblanks are NOT blank for horizontal ops)
+            let l_trail = $l_len - ($l_row | str trim --right | str length -g)
 
-        # Count leading blanks on right
-        let r_lead = $r_len - ($r_row | str trim --left | str length -g)
+            # Count leading blanks on right
+            let r_lead = $r_len - ($r_row | str trim --left | str length -g)
 
-        let fit_amount = $l_trail + $r_lead
+            let fit_amount = $l_trail + $r_lead
 
-        if $mode == 'smush' {
-            # Try smushing one more column
-            let smush_col_l = $l_len - $l_trail - 1
-            let smush_col_r = $r_lead
-            if $smush_col_l >= 0 and $smush_col_r < $r_len {
-                let l_chars = $l_row | split chars
-                let r_chars = $r_row | split chars
-                let lc = $l_chars | get $smush_col_l
-                let rc = $r_chars | get $smush_col_r
-                let result = smush-char $lc $rc $hardblank $rules $old_smush
-                if $result != null {
-                    $fit_amount + 1
+            if $mode == 'smush' {
+                # Try smushing one more column
+                let smush_col_l = $l_len - $l_trail - 1
+                let smush_col_r = $r_lead
+                if $smush_col_l >= 0 and $smush_col_r < $r_len {
+                    let l_chars = $l_row | split chars
+                    let r_chars = $r_row | split chars
+                    let lc = $l_chars | get $smush_col_l
+                    let rc = $r_chars | get $smush_col_r
+                    let result = smush-char $lc $rc $hardblank $rules $old_smush
+                    if $result != null {
+                        $fit_amount + 1
+                    } else {
+                        $fit_amount
+                    }
                 } else {
-                    $fit_amount
+                    $fit_amount + 1
                 }
             } else {
-                $fit_amount + 1
+                $fit_amount
             }
-        } else {
-            $fit_amount
         }
-    }
 
     # The overlap is the minimum across all rows, capped at left width
     let overlap = $max_per_row | math min
@@ -166,17 +166,17 @@ def combine-figs [
 
         let overlap_start_l = [0 $l_keep] | math max
         let overlap_chars = 0..<$overlap | each {|k|
-            let li = $overlap_start_l + $k
-            let ri = $k
-            let lc = if $li < $l_len { $l_chars | get $li } else { ' ' }
-            let rc = if $ri < $r_len { $r_chars | get $ri } else { ' ' }
-            if $mode == 'smush' {
-                let s = smush-char $lc $rc $hardblank $rules $old_smush
-                if $s != null { $s } else if $lc == ' ' { $rc } else { $lc }
-            } else {
-                if $lc == ' ' { $rc } else { $lc }
-            }
-        } | str join
+                let li = $overlap_start_l + $k
+                let ri = $k
+                let lc = if $li < $l_len { $l_chars | get $li } else { ' ' }
+                let rc = if $ri < $r_len { $r_chars | get $ri } else { ' ' }
+                if $mode == 'smush' {
+                    let s = smush-char $lc $rc $hardblank $rules $old_smush
+                    if $s != null { $s } else if $lc == ' ' { $rc } else { $lc }
+                } else {
+                    if $lc == ' ' { $rc } else { $lc }
+                }
+            } | str join
 
         let right_part = if $overlap < $r_len {
             $r_chars | skip $overlap | str join
@@ -192,7 +192,7 @@ def combine-figs [
 export def render-text [
     text: string
     font: record
-    --layout-override: string  # Override layout mode: full, fit, smush
+    --layout-override: string # Override layout mode: full, fit, smush
 ]: nothing -> string {
     let header = $font.header
     let chars = $font.chars
@@ -220,12 +220,12 @@ export def render-text [
 
     # Render a single line of text into FIGcharacter lines
     let render_line = {|line_text|
-        let result = $line_text | split chars | reduce --fold $empty_fig {|ch, acc|
-            let code = $ch | char-to-code
-            let fig = do $get_fig $code
-            let overlap = calc-overlap $acc $fig $hardblank $mode $rules $old_smush
-            combine-figs $acc $fig $overlap $hardblank $mode $rules $old_smush
-        }
+        let result = $line_text | split chars | reduce --fold $empty_fig {|ch acc|
+                let code = $ch | char-to-code
+                let fig = do $get_fig $code
+                let overlap = calc-overlap $acc $fig $hardblank $mode $rules $old_smush
+                combine-figs $acc $fig $overlap $hardblank $mode $rules $old_smush
+            }
 
         # Replace hardblanks with spaces in final output
         let lines = $result | each { str replace --all $hardblank ' ' }
@@ -233,10 +233,10 @@ export def render-text [
         # In fit/smush modes, strip common leading blank columns
         if $mode in ['fit' 'smush'] {
             let min_lead = $lines
-            | where { str trim | is-not-empty }
-            | each {|line| ($line | str length -g) - ($line | str trim --left | str length -g) }
-            | math min
-            | default 0
+                | where { str trim | is-not-empty }
+                | each {|line| ($line | str length -g) - ($line | str trim --left | str length -g) }
+                | math min
+                | default 0
             if $min_lead > 0 {
                 $lines | each { str substring -g $min_lead.. } | str join (char nl)
             } else {

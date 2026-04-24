@@ -3,8 +3,8 @@
 const VENDOR_FONT_DIR = (path self | path dirname | path join '..' 'fonts')
 const COMPILED_FONT_DIR = (path self | path dirname | path join '..' 'compiled')
 const BUNDLED_FONT_DIRS = [
-    (path self | path dirname | path join '..' 'font-submodules' 'figlet-fonts'),
-    (path self | path dirname | path join '..' 'font-submodules' 'FIGfonts' 'fonts'),
+    (path self | path dirname | path join '..' 'font-submodules' 'figlet-fonts')
+    (path self | path dirname | path join '..' 'font-submodules' 'FIGfonts' 'fonts')
 ]
 export const DEFAULT_FONT = 'Small.flf'
 
