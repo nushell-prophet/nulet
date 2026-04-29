@@ -4,5 +4,4 @@
 [submodule "FIGfonts"]
 	path = font-submodules/FIGfonts
 	url = https://github.com/PhMajerus/FIGfonts
-	shallow = true
 	sparse-checkout = fonts
