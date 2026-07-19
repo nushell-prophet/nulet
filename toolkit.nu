@@ -1,5 +1,7 @@
 # nulet development toolkit
 
+const COMPILED_DIR = (path self | path dirname | path join 'compiled')
+
 export def main [] {
     print "Available commands:"
     print "  toolkit.nu setup-fonts — fetch font submodules + compile fonts"
@@ -27,7 +29,7 @@ def compile-fonts [
 ] {
     use nulet/parse.nu [load-font]
     use nulet/fonts.nu [all-font-files, font-display-name]
-    let out_dir = $env.FILE_PWD | path join 'compiled'
+    let out_dir = $COMPILED_DIR
     mkdir $out_dir
 
     let fonts = if $font != null {
