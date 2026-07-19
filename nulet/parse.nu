@@ -87,7 +87,7 @@ export def layout-mode [header: record]: nothing -> record {
 
 # Parse a code tag line, returning the character code
 def parse-code-tag []: string -> int {
-    $in | str trim | split row ' ' | first | str downcase | into int
+    $in | str trim | split row ' ' | first | str lowercase | into int
 }
 
 # Load and parse a FIGfont file

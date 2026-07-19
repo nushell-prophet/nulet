@@ -40,7 +40,7 @@ export def gradient-names []: nothing -> list<string> {
 
 # Resolve a color name or #rrggbb hex to an RGB triple
 def resolve-color [spec: string]: nothing -> list<int> {
-    let s = $spec | str downcase | str trim
+    let s = $spec | str lowercase | str trim
     if ($s | str starts-with '#') {
         let hex = $s | str substring 1..
         [
